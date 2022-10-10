@@ -235,5 +235,43 @@ Condition element is OPTIONAL and controls WHEN the policy is in effect.
 
 - Lock the root user credentials (and use MFA)
 - Create individual IAM users
-- 
+- Assign permissions to groups and then assign groups to IAM users (don't assign permissions directly to users)
+- Always grant the least privilege you can grant
+- While getting started with permissions, use AWS managed policies. Go further to custom policies once you're accustomed to the process and understand implications. Watch out for mistakes!
+- When you start using custom policies, use customer managed policies instead of inline policies (attached directly to users).
+- Regularly audit the permissions assigned to users and principals of an AWS account.
+- Enforce complex password policy for ALL the users in the AWS account.
+- Use roles for application running on EC2 and delegate permissions in general.
+- Do not share access keys!
+- Rotate credentials regularly.
+- Remove unnecessary credentials regularly.
+- When defining custom permissions (using JSON), leverage the "Condition" field to enforce extra security in the permission (example limit IP-address to access a resource).
+- Monitor the activity in the account regularly.
 
+
+## Architecture Patterns
+
+1. A select group of users should be allowed to change their passwords.
+
+Create a group for the selected few users and apply a permission policy that grants iam:ChangePassword API permission.
+
+2. An EC2 instance must be delegated with permissions to a DynamoDB table.
+
+Create a role for the EC2 instance and assign a permission policy that grants access to the database.
+
+3. A company has just created an AWS account. They need to assign permissions to users based on job function.
+
+Enable MFA for the root user.
+Create IAM users and a group for each job function. Assign each user to the appropriate group(s). Then assign the appropriate permission policies to each group.
+
+4. A solutions architect needs to restrict access to an AWS service based on the source IP address of the requester.
+
+Create a custom permission policy and use the Condition property to control access based on the IP address.
+
+5. A dev needs to make API calls from their AWS CLI.
+
+Instruct the dev on how to create the access keys and how to use those to securely access AWS.
+
+6. A group of users require full access to all EC2 API actions.
+
+Create a permissions policy that uses a wildcard for the Action element relating to EC2 (ec2:*)
