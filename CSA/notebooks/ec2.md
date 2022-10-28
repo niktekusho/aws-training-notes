@@ -314,4 +314,12 @@ NAT Instances = EC2 Instance configured to do what NAT Gateways do. Replaced by 
 NAT Instances use a special AMI `amzn-ami-vpc-nat`.
 NAT Instances must disable source and destination checks to allow the translation of addresses!
 
+#### NAT instances vs NAT gateways
 
+- NAT instances are managed by the customer (OS updates, etc), NAT gateways by AWS
+- NAT instances scale up manually (instance types) and use EC2 networking, NAT gateways provide elastic scaling up to 45 Gbps
+- NAT instances do not have HA (can be done manually), NAT gateways have automatic HA inside an Availability Zone and can be created across zones
+- NAT instances need to use Security Groups, NAT gateways do not (allow outbound access only)
+- NAT instances can be used as Bastion Host, NAT gateways can not be accessed via SSH
+- NAT instances can use Elastic IPs or public IPs, NAT gateways can only use Elastic IPs defined at creation time
+- NAT instances can implement port forwarding manually, NAT gateways can not  
