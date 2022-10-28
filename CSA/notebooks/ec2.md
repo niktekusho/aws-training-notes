@@ -323,3 +323,95 @@ NAT Instances must disable source and destination checks to allow the translatio
 - NAT instances can be used as Bastion Host, NAT gateways can not be accessed via SSH
 - NAT instances can use Elastic IPs or public IPs, NAT gateways can only use Elastic IPs defined at creation time
 - NAT instances can implement port forwarding manually, NAT gateways can not  
+
+## EC2 Instance Lifecycle
+
+1. EC2 launch instance from AMI -> **`Pending`**
+2. Once the instance is ready -> **`Running`**
+   1. When an instance is **`Running`** it can be _rebooted_. -> **`Rebooting`**
+      After the reboot the instance should be **`Running`**
+   2. When an instance is **`Running`** it can be _terminated_ -> **`Shutting Down`** -> **`Terminated`**
+   3. When an instance is **`Running`** it can be _stopped_ -> **`Stopping`** -> **`Stopped`**
+3. When an instance is **`Stopped`** it can be _terminated_ -> **`Terminated`**
+4. When an instance is **`Stopped`** it can be _started_ again -> **`Pending`**
+
+### Stopped instances
+
+- Only EBS-backed instances can be stopped/hibernated! NO instance volumes!
+- Stopped instances do not cost money.
+- EBS volumes attached to a stopped instance can cost money.
+- Data in RAM is lost
+- Instance is migrated to a different host -> can be used to avoid downtime if the customer knows about a scheduled hardware maintainance
+- Private IPs are retained
+- Public IPs are released
+- Elastic IPs are retained
+
+### Hibernated instances
+
+- Only on-demand or reserved Linux instances configured to be hibernated **on launch**
+- RAM data is stored in a EBS volume
+- After hibernation, EBS root volume is restored to its snapshot, RAM contents are restored, previously running processes are resumed, previously attached volumes are attached with the same id
+
+### Rebooted instances
+
+- Same as OS reboot
+- DNS name and all IPs retained
+- Does not cost money
+
+### Retiring instances
+
+AWS *retires* EC2 instances when:
+
+- AWS detects irreparable failure of host's hardware
+- instance reaches its scheduled retirement date
+
+### Terminated instances
+
+- Same as "delete" instance
+- Cannot be recovered
+- EBS root volumes are deleted by default
+
+### Recovering instances
+
+- CloudWatch can monitor system status checks and signal recovers when needed
+- Usually caused by underlying platform issues
+- Recovered instance is identical to original instance
+
+## Nitro instances and enclaves
+
+Nitro = next gen hardware platform for EC2 instances
+
+- Supports both virtualized instances and bare-metal instances
+- Nitro aims to provide best performance for instances impaired by virtualization costs
+- Each function is a specialized hardware managed by the Nitro Hypervisor
+  - Nitro "cards" for VPC
+  - Nitro "cards" for EBS
+  - Nitro for instance storage
+  - Nitro card controller
+  - Nitro security chip
+  - Nitro Hypervisor
+  - Nitro Enclaves
+- Nitro provides close-to-metal performance even for virtualized instances
+- Nitro powers Elastic Network and Fabric Adapters
+- Nitro achieves higher network performance (100 Gbps)
+- Nitro platform is optimized for HPC 
+- Nitro provides 60 TB storage instances
+
+Nitro enclaves provide isolated computing environments:
+- runs on isolated/hardened VMs
+- does not have persistent storage, interactive access and external networking
+- uses cryptographic attestation to ensure only authorized code is running
+- integrates with AWS Key Management Service (KMS)
+
+Nitro enclaves should be used to protect and securely process very sensitive data:
+- Personal Identifiable Information (PII)
+- Healthcare data
+- Financial data
+- Intellectual Property data
+- 
+
+
+
+
+
+
