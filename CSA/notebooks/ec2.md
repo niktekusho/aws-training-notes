@@ -395,7 +395,7 @@ Nitro = next gen hardware platform for EC2 instances
 - Nitro powers Elastic Network and Fabric Adapters
 - Nitro achieves higher network performance (100 Gbps)
 - Nitro platform is optimized for HPC 
-- Nitro provides 60 TB storage instances
+- Nitro provides up to 60 TB storage instances
 
 Nitro enclaves provide isolated computing environments:
 - runs on isolated/hardened VMs
@@ -408,10 +408,133 @@ Nitro enclaves should be used to protect and securely process very sensitive dat
 - Healthcare data
 - Financial data
 - Intellectual Property data
-- 
+
+## EC2 Pricing
+
+EBS volumes are billed per second with a minimum of 1 minute.
+Billed per hour with a minimum of 1 hour for Windows and commercial Linux distro (ex RedHat EL).
+
+### On-demand Instances
+
+Customers pay a standard price, without discount.
+Customers have no commitment (leave when you want).
+
+Good for dev/test environments and/or short-term or unpredictable workloads.
+
+Billed per second with a minimum of 1 minute for Windows, Amazon Linux and Ubuntu instances.
+
+### Reserved Instances
+
+Customers pay a discounted price within the time of commitment (1 or 3 years).
+Good for production/stable environments or predictable workloads.
+
+Customers can pay:
+
+- all upfront (max discount),
+- partial upfront (upfront amount + monthly payment)
+- no upfront (min discount, payments occured monthly)
+
+Billed per second with a minimum of 1 minute for Windows, Amazon Linux and Ubuntu instances.
+
+Discount is applied when the **attributes** of an instance **match the attrbiutes of a Reserved Instance** .
+Considered attributes are:
+
+- Instance family (a1. m4. etc)
+- Instance OS
+- Tenancy (default or dedicated)
+- Availability Zones (including capacity reserve)
+- Region (excluding capacity reserve)
+
+2 types of Reserved Instances (RI):
+
+- **Standard RI**: instance can change AZ, instance size (only Linux) and networking type (API `EC2:ModifyReservedInstances`)
+- **Convertible RI**: instance can change AZ, instance size (only Linux), networking type, *instance family*, *tenancy* and *payment option* (API `EC2:ExchangeReservedInstances`)
 
 
+(Deprecated!) Scheduled Reserved Instances: an RI matches capacity reservation to recurring schedules (min 1200 hours per year).
+Useful for services that needs to run periodically and can then terminate "safely" (ex. reporting app that runs 6 hours a day x 4 days a week = 1248 hours per year).
 
 
+### Spot Instances
 
+Customers pay a high discounted price for unused AWS capacity (up to 90%).
+Spot Instances can be terminated by AWS at any time with a 2 minute notice when AWS need to allocate resources to other instances.
+Good for workloads that have flexible start and end times (batch processing).
+
+Billed per second with a minimum of 1 minute for Windows, Amazon Linux and Ubuntu instances.
+
+3 types of deploy:
+
+- Spot Instance: customer defines a single instance
+- Spot Fleet: customer defines a target capacity and AWS launches and manages Spot Instances and On-demand Instances to meet that capacity
+- EC2 Fleet: customer defines number of Spot/On-demand/Reserved instances and AWS launches and manages those instances with one SINGLE API call
+
+(Deprecated!) Spot Block: Spot Instance with the requirement of running uninterrupted for a range of time (1 to 6 hours). Price can be 30/45% less than On-demand Instances.
+
+### Dedicated Instances
+
+Customers pay per instance.
+Dedicated Instances run on dedicated hosts, isolated from instances of other AWS customers.
+
+*Dedicated Instances run on the same host of instances executed by the same customer*
+
+### Dedicated Hosts
+
+Customers pay per host.
+Dedicated Hosts Instances have access to the whole physical server.
+Dedicated Hosts Instances give access to sockets, cores and host's ID to apps running on them.
+
+Dedicated Hosts Instances can be configured to run specific instances on specific hosts (host affinity and targeted placement).
+
+Could be used if licensing is released on specific hardware (socket, CPU cores, etc)
+
+Dedicated Hosts Instances can add capacity using an allocation request.
+
+### Savings Plans
+
+Customers pay based on amount of usage per hour and have a commitment of 1 or 3 years.
+
+2 subtypes:
+
+- Compute Savings Plan: 1 or 3 years of commitment, usage commitment by hour of **Fargate, Lambda and EC2**. Valid on **every region, family, size, tenancy and OS of the instances**.
+- EC2 Savings Plan: 1 or 3 years of commitment, usage commitment by hour of **EC2 ONLY**. Valid on **specific regions and families**, **any size, tenancy and OS of the instances**.
+
+## Architecture Patterns
+
+> Run short batch script to configure Amazon EC2 Linux intances after they are launched?
+
+Custom AMI or user data of the EC2 instances.
+
+> Thightly coupled HPC workload requires low-latency between nodes and optimum network performance?
+
+Deploy EC2 instances in a cluster placement group in a single AZ and use Elastic Fabric Adapter.
+
+> Critical app receives weekly bursts of traffic and must scale for short periods, which is the most cost-effective solution?
+
+Use Reserved Instances for minimum workloads and then use Spot Instances for the bursts in traffic.
+
+> Single instance app with static public IP, how do you remap the address in case of failures?
+
+Attach an Elastic IP Address to the EC2 instance and remap that IP in case of failures.
+
+> Fleet of EC2 instances run in private subnets across AZs. How do you provide a redundant path to the internet?
+
+Deploy NAT gateways in the AZs and configure route tables accordingly.
+
+> How to let devs administer EC2 instances in private subnets from SSH?
+
+Deploy a bastion host in a public subnet and attach it to the private subnets.
+Devs will use SSH to connect to the bastion host and inside the bastion host they will connect to the private instances.
+
+> App uses multiple EC2 instances. How do you minimize hardware failures?
+
+Deploy instances in a spread placement group.
+
+> App requires enhanced networking capabilities.
+
+Choose an instance type that supports enhanced networking abd ensure Elastic Network Adapter module is installed and configured in the instance OS.
+
+> Instance needs minimum virtualization overhead/high bandwidth/?
+
+Deploy a Nitro instance type.
 
